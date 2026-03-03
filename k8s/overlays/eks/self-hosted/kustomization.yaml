@@ -17,8 +17,8 @@ components:
 
 images:
   - name: BACKEND_IMAGE
-    newName: ghcr.io/mahammadRafi06/connectk-backend
+    newName: ghcr.io/mahammadrafi06/connectk-backend
     newTag: latest
   - name: FRONTEND_IMAGE
-    newName: ghcr.io/mahammadRafi06/connectk-frontend
+    newName: ghcr.io/mahammadrafi06/connectk-frontend
     newTag: latest
