@@ -15,22 +15,22 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Enums
-    op.execute("CREATE TYPE cloud_provider AS ENUM ('GKE', 'AKS', 'EKS')")
-    op.execute("CREATE TYPE cluster_status AS ENUM ('active', 'unreachable', 'pending')")
-    op.execute("CREATE TYPE gitops_tool AS ENUM ('argocd', 'fluxcd')")
-    op.execute("CREATE TYPE deployment_backend AS ENUM ('sglang', 'vllm', 'trtllm')")
-    op.execute("CREATE TYPE deployment_type_enum AS ENUM ('aggregated', 'aggregated_route', 'disaggregated_route')")
-    op.execute("""CREATE TYPE deployment_status AS ENUM (
+    # Enums (IF NOT EXISTS prevents failures when multiple pods race)
+    op.execute("DO $$ BEGIN CREATE TYPE cloud_provider AS ENUM ('GKE', 'AKS', 'EKS'); EXCEPTION WHEN duplicate_object THEN null; END $$")
+    op.execute("DO $$ BEGIN CREATE TYPE cluster_status AS ENUM ('active', 'unreachable', 'pending'); EXCEPTION WHEN duplicate_object THEN null; END $$")
+    op.execute("DO $$ BEGIN CREATE TYPE gitops_tool AS ENUM ('argocd', 'fluxcd'); EXCEPTION WHEN duplicate_object THEN null; END $$")
+    op.execute("DO $$ BEGIN CREATE TYPE deployment_backend AS ENUM ('sglang', 'vllm', 'trtllm'); EXCEPTION WHEN duplicate_object THEN null; END $$")
+    op.execute("DO $$ BEGIN CREATE TYPE deployment_type_enum AS ENUM ('aggregated', 'aggregated_route', 'disaggregated_route'); EXCEPTION WHEN duplicate_object THEN null; END $$")
+    op.execute("""DO $$ BEGIN CREATE TYPE deployment_status AS ENUM (
         'creating', 'provisioning', 'running', 'updating', 'degraded',
         'failed', 'deleting', 'deleted', 'delete_failed', 'rolling_back'
-    )""")
-    op.execute("CREATE TYPE model_source_type AS ENUM ('huggingface', 's3', 'gcs', 'azure_blob', 'custom')")
-    op.execute("CREATE TYPE access_level AS ENUM ('list', 'view', 'deploy', 'admin')")
-    op.execute("""CREATE TYPE audit_action AS ENUM (
+    ); EXCEPTION WHEN duplicate_object THEN null; END $$""")
+    op.execute("DO $$ BEGIN CREATE TYPE model_source_type AS ENUM ('huggingface', 's3', 'gcs', 'azure_blob', 'custom'); EXCEPTION WHEN duplicate_object THEN null; END $$")
+    op.execute("DO $$ BEGIN CREATE TYPE access_level AS ENUM ('list', 'view', 'deploy', 'admin'); EXCEPTION WHEN duplicate_object THEN null; END $$")
+    op.execute("""DO $$ BEGIN CREATE TYPE audit_action AS ENUM (
         'create', 'read', 'update', 'delete', 'login', 'logout',
         'permission_change', 'test_connection'
-    )""")
+    ); EXCEPTION WHEN duplicate_object THEN null; END $$""")
 
     # clusters
     op.create_table(
