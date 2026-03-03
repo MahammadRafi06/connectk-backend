@@ -28,4 +28,4 @@ starlette-csrf==3.0.0
 limits==3.14.0
 aiofiles==24.1.0
 tenacity==9.0.0
-"fastapi[standard]"
+fastapi[standard]
