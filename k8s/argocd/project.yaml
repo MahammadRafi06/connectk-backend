@@ -32,6 +32,8 @@ spec:
       kind: "*"
     - group: networking.k8s.io
       kind: Ingress
+    - group: elbv2.k8s.aws
+      kind: TargetGroupBinding
 
   # Sync windows — uncomment to restrict prod deploys to business hours
   # syncWindows:

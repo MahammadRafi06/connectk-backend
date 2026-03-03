@@ -4,19 +4,20 @@ metadata:
   name: connectk-ingress
   namespace: connectk
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    # Uncomment if using cert-manager for TLS:
-    # cert-manager.io/cluster-issuer: letsencrypt-prod
+    # AWS ALB Ingress annotations
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /api/health
+    alb.ingress.kubernetes.io/group.name: connectk
+    # Uncomment for HTTPS (requires ACM certificate ARN):
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:REGION:ACCOUNT:certificate/CERT_ID
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
 spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - connectk.yourdomain.com
-      secretName: connectk-tls
+  ingressClassName: alb
   rules:
-    - host: connectk.yourdomain.com
-      http:
+    - http:
         paths:
           - path: /api
             pathType: Prefix

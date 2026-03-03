@@ -14,7 +14,7 @@ patches:
     patch: |-
       - op: replace
         path: /stringData/DATABASE_URL
-        value: "postgresql+asyncpg://connectk:REPLACE_ME_WITH_STRONG_PASSWORD@postgres:5432/connectk"
+        value: "postgresql+asyncpg://connectk:0VVobfid5Ba6YFiORpjSmtGc2IOF1a3@postgres:5432/connectk"
       - op: replace
         path: /stringData/DATABASE_SYNC_URL
-        value: "postgresql://connectk:REPLACE_ME_WITH_STRONG_PASSWORD@postgres:5432/connectk"
+        value: "postgresql://connectk:0VVobfid5Ba6YFiORpjSmtGc2IOF1a3@postgres:5432/connectk"

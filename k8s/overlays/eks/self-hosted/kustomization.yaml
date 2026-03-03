@@ -9,9 +9,7 @@ kind: Kustomization
 
 resources:
   - ../../../base
-  - ../storageclass.yaml
-  # Uncomment if installing CSI driver manually (not needed with EKS managed add-on):
-  # - ../ebs-csi-driver-sa.yaml
+  - storageclass.yaml
 
 components:
   - ../../../components/postgres-self-hosted
@@ -19,8 +17,8 @@ components:
 
 images:
   - name: BACKEND_IMAGE
-    newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/connectk-backend
+    newName: ghcr.io/mahammadRafi06/connectk-backend
     newTag: latest
   - name: FRONTEND_IMAGE
-    newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/connectk-frontend
+    newName: ghcr.io/mahammadRafi06/connectk-frontend
     newTag: latest
