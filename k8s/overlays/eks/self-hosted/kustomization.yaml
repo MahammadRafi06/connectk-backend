@@ -8,17 +8,17 @@ kind: Kustomization
 #   - EBS CSI Driver add-on installed (see ebs-csi-driver-sa.yaml comments)
 
 resources:
-  - ../../../base
-  - storageclass.yaml
+- ../../../base
+- storageclass.yaml
 
 components:
-  - ../../../components/postgres-self-hosted
-  - ../../../components/redis-self-hosted
+- ../../../components/postgres-self-hosted
+- ../../../components/redis-self-hosted
 
 images:
-  - name: BACKEND_IMAGE
-    newName: ghcr.io/mahammadrafi06/connectk-backend
-    newTag: latest
-  - name: FRONTEND_IMAGE
-    newName: ghcr.io/mahammadrafi06/connectk-frontend
-    newTag: latest
+- name: BACKEND_IMAGE
+  newName: ghcr.io/MahammadRafi06/connectk-backend
+  newTag: sha-1a6ccab
+- name: FRONTEND_IMAGE
+  newName: ghcr.io/mahammadrafi06/connectk-frontend
+  newTag: latest
