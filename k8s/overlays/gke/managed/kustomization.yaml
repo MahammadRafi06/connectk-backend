@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# GKE + managed CloudSQL & Memorystore
+# Deploy: kubectl apply -k k8s/overlays/gke/managed/
+#
+# Prerequisites:
+#   - CloudSQL PostgreSQL instance with connectk database created
+#   - Memorystore Redis instance provisioned
+#   - Update DATABASE_URL and REDIS_URL in the managed components before deploying
+
+resources:
+  - ../../../base
+
+components:
+  - ../../../components/postgres-managed
+  - ../../../components/redis-managed
+
+images:
+  - name: BACKEND_IMAGE
+    newName: YOUR_REGISTRY/connectk-backend
+    newTag: latest
+  - name: FRONTEND_IMAGE
+    newName: YOUR_REGISTRY/connectk-frontend
+    newTag: latest

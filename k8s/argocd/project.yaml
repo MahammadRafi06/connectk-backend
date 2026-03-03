@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: connectk
+  namespace: argocd
+spec:
+  description: ConnectK application project
+
+  # Only allow deploying to the connectk namespace
+  destinations:
+    - namespace: connectk
+      server: https://kubernetes.default.svc
+      name: in-cluster
+
+  # Allow resources from the backend repo (holds all K8s manifests)
+  sourceRepos:
+    - "https://github.com/MahammadRafi06/connectk-backend.git"
+
+  # Allowed K8s resource types
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: storage.k8s.io
+      kind: StorageClass
+
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: apps
+      kind: "*"
+    - group: autoscaling
+      kind: "*"
+    - group: networking.k8s.io
+      kind: Ingress
+
+  # Sync windows — uncomment to restrict prod deploys to business hours
+  # syncWindows:
+  #   - kind: allow
+  #     schedule: "0 9-17 * * 1-5"   # Mon–Fri 9am–5pm
+  #     duration: 8h
+  #     applications: ["connectk-*"]

@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - statefulset.yaml
+  - service.yaml
+  - secret.yaml
+
+# Patch backend-secrets to point DATABASE_URL at the in-cluster Postgres Service
+patches:
+  - target:
+      kind: Secret
+      name: backend-secrets
+    patch: |-
+      - op: replace
+        path: /stringData/DATABASE_URL
+        value: "postgresql+asyncpg://connectk:REPLACE_ME_WITH_STRONG_PASSWORD@postgres:5432/connectk"
+      - op: replace
+        path: /stringData/DATABASE_SYNC_URL
+        value: "postgresql://connectk:REPLACE_ME_WITH_STRONG_PASSWORD@postgres:5432/connectk"

@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# EKS + managed RDS PostgreSQL & ElastiCache Redis
+# Deploy: kubectl apply -k k8s/overlays/eks/managed/
+#
+# Prerequisites:
+#   - RDS PostgreSQL instance with connectk database created
+#   - ElastiCache Redis cluster provisioned
+#   - Both must be in the same VPC / reachable from the EKS cluster
+#   - Update DATABASE_URL and REDIS_URL in the managed components before deploying
+
+resources:
+  - ../../../base
+
+components:
+  - ../../../components/postgres-managed
+  - ../../../components/redis-managed
+
+images:
+  - name: BACKEND_IMAGE
+    newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/connectk-backend
+    newTag: latest
+  - name: FRONTEND_IMAGE
+    newName: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/connectk-frontend
+    newTag: latest

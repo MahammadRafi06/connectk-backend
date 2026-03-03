@@ -1,0 +1,13 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: connectk-ssd
+  labels:
+    app.kubernetes.io/part-of: connectk
+# GKE PD CSI driver (pre-installed on GKE 1.18+)
+provisioner: pd.csi.storage.gke.io
+parameters:
+  type: pd-ssd
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain

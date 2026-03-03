@@ -1,0 +1,74 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: connectk
+  namespace: argocd
+spec:
+  # ──────────────────────────────────────────────
+  # Generator: list your active deployments here.
+  # Each element becomes one ArgoCD Application.
+  # Uncomment / add entries for each environment you deploy to.
+  # ──────────────────────────────────────────────
+  generators:
+    - list:
+        elements:
+          # Uncomment the combination you want to deploy:
+
+          # --- GKE ---
+          # - cloud: gke
+          #   strategy: self-hosted
+          # - cloud: gke
+          #   strategy: managed
+
+          # --- AKS ---
+          # - cloud: aks
+          #   strategy: self-hosted
+          # - cloud: aks
+          #   strategy: managed
+
+          # --- EKS ---
+          - cloud: eks
+            strategy: self-hosted
+          # - cloud: eks
+          #   strategy: managed
+
+  template:
+    metadata:
+      name: "connectk-{{cloud}}-{{strategy}}"
+      labels:
+        app.kubernetes.io/part-of: connectk
+        connectk/cloud: "{{cloud}}"
+        connectk/strategy: "{{strategy}}"
+    spec:
+      project: connectk
+
+      source:
+        repoURL: "https://github.com/MahammadRafi06/connectk-backend.git"
+        targetRevision: main
+        path: "k8s/overlays/{{cloud}}/{{strategy}}"
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: connectk
+
+      syncPolicy:
+        automated:
+          prune: true       # Delete resources removed from Git
+          selfHeal: true    # Revert manual cluster changes to match Git
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 1m
+
+      # Ignore differences that K8s controllers mutate at runtime
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas    # Let HPA manage replica count

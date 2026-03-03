@@ -1,0 +1,155 @@
+name: CI — Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "alembic/**"
+      - "requirements.txt"
+      - "Dockerfile"
+      - ".github/workflows/ci-backend.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "alembic/**"
+      - "requirements.txt"
+
+env:
+  # Default to GHCR. Override via GitHub repo variables for client-specific registries.
+  #   vars.REGISTRY        → ghcr.io | ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com | YOUR_ACR.azurecr.io
+  #   vars.DEPLOY_OVERLAY  → eks/self-hosted | aks/managed | gke/self-hosted | etc.
+  REGISTRY: ${{ vars.REGISTRY || 'ghcr.io' }}
+  IMAGE_NAME: ${{ vars.REGISTRY && format('{0}/connectk-backend', vars.REGISTRY) || format('ghcr.io/{0}/connectk-backend', github.repository_owner) }}
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1: Lint & test
+  # ──────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Uncomment when you add a linter config:
+      # - name: Run ruff
+      #   run: pip install ruff && ruff check .
+
+      # Uncomment when you add tests:
+      # - name: Run tests
+      #   run: pip install pytest pytest-asyncio && pytest
+
+  # ──────────────────────────────────────────────
+  # Job 2: Build & push Docker image
+  # ──────────────────────────────────────────────
+  build-push:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    needs: lint
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      image-tag: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # ── GHCR login (default) ──
+      - name: Login to GHCR
+        if: env.REGISTRY == 'ghcr.io'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── ECR login (AWS) ──
+      - name: Login to ECR
+        if: contains(env.REGISTRY, 'amazonaws.com')
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # ── ACR login (Azure) ──
+      - name: Login to ACR
+        if: contains(env.REGISTRY, 'azurecr.io')
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # ── GAR login (GCP) ──
+      - name: Login to GAR
+        if: contains(env.REGISTRY, 'pkg.dev')
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=ref,event=branch
+            type=raw,value=latest
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ──────────────────────────────────────────────
+  # Job 3: Update K8s manifests (triggers ArgoCD sync)
+  # ──────────────────────────────────────────────
+  update-manifests:
+    name: Update K8s Manifests
+    runs-on: ubuntu-latest
+    needs: build-push
+    if: vars.DEPLOY_OVERLAY != ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update backend image tag
+        run: |
+          cd k8s/overlays/${{ vars.DEPLOY_OVERLAY }}
+          kustomize edit set image BACKEND_IMAGE=${{ env.IMAGE_NAME }}:sha-${GITHUB_SHA::7}
+
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "ci: update backend image to sha-${GITHUB_SHA::7} [skip ci]"
+          git push

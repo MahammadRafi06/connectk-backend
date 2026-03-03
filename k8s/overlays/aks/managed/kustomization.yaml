@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# AKS + managed Azure Database for PostgreSQL & Azure Cache for Redis
+# Deploy: kubectl apply -k k8s/overlays/aks/managed/
+#
+# Prerequisites:
+#   - Azure Database for PostgreSQL Flexible Server with connectk database created
+#   - Azure Cache for Redis instance provisioned
+#   - Update DATABASE_URL and REDIS_URL in the managed components before deploying
+
+resources:
+  - ../../../base
+
+components:
+  - ../../../components/postgres-managed
+  - ../../../components/redis-managed
+
+images:
+  - name: BACKEND_IMAGE
+    newName: YOUR_ACR.azurecr.io/connectk-backend
+    newTag: latest
+  - name: FRONTEND_IMAGE
+    newName: YOUR_ACR.azurecr.io/connectk-frontend
+    newTag: latest

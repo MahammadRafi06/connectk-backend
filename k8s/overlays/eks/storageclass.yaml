@@ -1,0 +1,16 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: connectk-ssd
+  labels:
+    app.kubernetes.io/part-of: connectk
+# Amazon EBS CSI driver — MUST be installed as an EKS add-on first:
+#   eksctl create addon --name aws-ebs-csi-driver --cluster YOUR_CLUSTER \
+#     --service-account-role-arn arn:aws:iam::ACCOUNT_ID:role/AmazonEKS_EBS_CSI_DriverRole
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  encrypted: "true"
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain
