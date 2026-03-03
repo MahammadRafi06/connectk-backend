@@ -1,4 +1,4 @@
-"""ConnectK FastAPI Application Entry Point."""
+"""ConnectK FastAPI Application Entry Point — v2.0.0"""
 import logging
 import secrets
 import time
