@@ -21,6 +21,8 @@ env:
   #   vars.REGISTRY        → ghcr.io | ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com | YOUR_ACR.azurecr.io
   #   vars.DEPLOY_OVERLAY  → eks/self-hosted | aks/managed | gke/self-hosted | etc.
   REGISTRY: ${{ vars.REGISTRY || 'ghcr.io' }}
+  # Note: github.repository_owner may contain uppercase, but Docker requires lowercase.
+  # The docker/metadata-action automatically lowercases image names.
   IMAGE_NAME: ${{ vars.REGISTRY && format('{0}/connectk-backend', vars.REGISTRY) || format('ghcr.io/{0}/connectk-backend', github.repository_owner) }}
 
 permissions:
@@ -142,8 +144,9 @@ jobs:
 
       - name: Update backend image tag
         run: |
+          IMAGE_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           cd k8s/overlays/${{ vars.DEPLOY_OVERLAY }}
-          kustomize edit set image BACKEND_IMAGE=${{ env.IMAGE_NAME }}:sha-${GITHUB_SHA::7}
+          kustomize edit set image BACKEND_IMAGE=${IMAGE_LOWER}:sha-${GITHUB_SHA::7}
 
       - name: Commit & push
         run: |
