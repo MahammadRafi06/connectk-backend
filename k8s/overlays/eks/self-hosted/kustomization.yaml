@@ -21,4 +21,4 @@ images:
   newTag: sha-1a6ccab
 - name: FRONTEND_IMAGE
   newName: ghcr.io/mahammadrafi06/connectk-frontend
-  newTag: latest
+  newTag: sha-8155278
